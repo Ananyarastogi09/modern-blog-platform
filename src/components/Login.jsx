@@ -1,137 +1,134 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { Button, Input, Logo } from "../components/index";
-import { login as authlogin } from "../store/authSlice";
-import { useForm } from "react-hook-form";
-import authservice from "../appwrite/auth";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+const loginRequest = async ({ username, password }) => {
+  throw new Error("Login API is not connected yet.");
+};
+
+const inputClasses =
+  "block w-full h-[38px] px-3 py-1.5 text-base leading-6 text-[#212529] bg-white " +
+  "border border-[#dee2e6] rounded-md placeholder:text-[#6c757d] " +
+  "transition focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 " +
+  "aria-invalid:border-red-600";
 
 function Login() {
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm();
+  const handleLogin = async () => {
+    await loginRequest({ username: username.trim(), password });
+  };
 
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-    const login = async (data) => {
-        setError("");
-        setLoading(true);
+    if (!username.trim()) {
+      setError("Username is required.");
+      return;
+    }
 
-        try {
-            const session = await authservice.login(data);
+    if (!password) {
+      setError("Password is required.");
+      return;
+    }
 
-            if (session) {
-                const userData = await authservice.getcurrentuser();
+    setLoading(true);
 
-                if (userData) {
-                    dispatch(authlogin(userData));
-                    navigate("/");
-                }
-            }
-        } catch (error) {
-            setError(error.message || "Unable to sign in. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+      await handleLogin();
+    } catch (err) {
+      setError(err?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="flex w-full items-center justify-center">
-            <div className="mx-auto w-full max-w-md">
-                <div className="mb-7 text-center">
-                    <div className="mb-5 flex justify-center">
-                        <span className="inline-block w-full max-w-[90px]">
-                            <Logo width="100%" />
-                        </span>
-                    </div>
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#f8f9fa] px-3 py-4 font-sans text-[#212529]">
+      <div className="w-full max-w-[540px] rounded-md border border-[#dee2e6] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.12)] sm:p-6">
+        <h1 className="mb-6 text-center text-[1.75rem] font-semibold leading-tight sm:text-[2rem]">
+          Login
+        </h1>
 
-                    <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                        Sign in to your account
-                    </h2>
-
-                    <p className="mt-2 text-sm text-slate-500">
-                        Don't have an account?{" "}
-                        <Link
-                            to="/signup"
-                            className="font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-700 hover:underline"
-                        >
-                            Sign Up
-                        </Link>
-                    </p>
-                </div>
-
-                {error && (
-                    <div
-                        className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-                        role="alert"
-                    >
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit(login)} noValidate>
-                    <div className="space-y-5">
-                        <div>
-                            <Input
-                                label="Email"
-                                placeholder="Enter your email"
-                                type="email"
-                                autoComplete="email"
-                                {...register("email", {
-                                    required: "Email is required",
-                                    validate: {
-                                        matchPattern: (value) =>
-                                            /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(
-                                                value
-                                            ) ||
-                                            "Please enter a valid email address",
-                                    },
-                                })}
-                            />
-
-                            {errors.email && (
-                                <p className="mt-1.5 text-xs font-medium text-red-600">
-                                    {errors.email.message}
-                                </p>
-                            )}
-                        </div>
-
-                        <div>
-                            <Input
-                                label="Password"
-                                type="password"
-                                placeholder="Enter your password"
-                                autoComplete="current-password"
-                                {...register("password", {
-                                    required: "Password is required",
-                                })}
-                            />
-
-                            {errors.password && (
-                                <p className="mt-1.5 text-xs font-medium text-red-600">
-                                    {errors.password.message}
-                                </p>
-                            )}
-                        </div>
-
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={loading}
-                        >
-                            {loading ? "Signing in..." : "Sign in"}
-                        </Button>
-                    </div>
-                </form>
+        <form onSubmit={handleSubmit} noValidate>
+          {error && (
+            <div
+              id="login-error"
+              role="alert"
+              className="mb-4 rounded-md border border-[#f5c2c7] bg-[#f8d7da] px-3 py-2 text-[0.95rem] text-[#842029]"
+            >
+              {error}
             </div>
-        </div>
-    );
+          )}
+
+          <div className="mb-4">
+            <label
+              htmlFor="username"
+              className="mb-2 block text-base leading-6"
+            >
+              Username
+            </label>
+
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              aria-invalid={error === "Username is required."}
+              aria-describedby={error ? "login-error" : undefined}
+              className={inputClasses}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-base leading-6"
+            >
+              Password
+            </label>
+
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={error === "Password is required."}
+              aria-describedby={error ? "login-error" : undefined}
+              className={inputClasses}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="block h-[38px] w-full rounded-md border border-[#0d6efd] bg-[#0d6efd] px-3 py-1.5 text-base leading-6 text-white transition hover:border-[#0b5ed7] hover:bg-[#0b5ed7] active:border-[#0a58ca] active:bg-[#0a58ca] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#0d6efd]/50 disabled:cursor-not-allowed disabled:opacity-65"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <p className="mt-4 text-center text-base leading-6">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-[#0d6efd] underline hover:text-[#0a58ca]"
+          >
+            Register
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default Login;
