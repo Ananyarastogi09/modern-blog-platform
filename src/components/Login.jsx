@@ -1,8 +1,23 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Client, Account } from "appwrite";
 
-const loginRequest = async ({ username, password }) => {
-  throw new Error("Login API is not connected yet.");
+const client = new Client();
+
+client
+  .setEndpoint("https://fra.cloud.appwrite.io/v1")
+  .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
+  console.log("PROJECT ID:", import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
+const account = new Account(client);
+
+const loginRequest = async ({ email, password }) => {
+  const session = await account.createEmailPasswordSession({
+    email,
+    password,
+  });
+
+  return session;
 };
 
 const inputClasses =
@@ -12,21 +27,19 @@ const inputClasses =
   "aria-invalid:border-red-600";
 
 function Login() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleLogin = async () => {
-    await loginRequest({ username: username.trim(), password });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!username.trim()) {
-      setError("Username is required.");
+    if (!email.trim()) {
+      setError("Email is required.");
       return;
     }
 
@@ -38,7 +51,12 @@ function Login() {
     setLoading(true);
 
     try {
-      await handleLogin();
+      await loginRequest({
+        email: email.trim(),
+        password,
+      });
+
+      navigate("/");
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
     } finally {
@@ -66,21 +84,21 @@ function Login() {
 
           <div className="mb-4">
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="mb-2 block text-base leading-6"
             >
-              Username
+              Email
             </label>
 
             <input
-              id="username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              aria-invalid={error === "Username is required."}
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={error === "Email is required."}
               aria-describedby={error ? "login-error" : undefined}
               className={inputClasses}
             />
