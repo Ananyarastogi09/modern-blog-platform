@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Client, Account } from "appwrite";
+import { useDispatch } from "react-redux";
+import { login } from "../store/authSlice";
+import authservice from "../appwrite/auth.js";
 
 const client = new Client();
 
 client
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
   .setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
-  console.log("PROJECT ID:", import.meta.env.VITE_APPWRITE_PROJECT_ID);
+
+console.log(
+  "PROJECT ID:",
+  import.meta.env.VITE_APPWRITE_PROJECT_ID
+);
 
 const account = new Account(client);
 
@@ -28,6 +35,7 @@ const inputClasses =
 
 function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -51,10 +59,14 @@ function Login() {
     setLoading(true);
 
     try {
-      await loginRequest({
+      await authservice.login({
         email: email.trim(),
         password,
       });
+
+      const userdata = await authservice.getcurrentuser();
+
+      dispatch(login({ userdata }));
 
       navigate("/");
     } catch (err) {
